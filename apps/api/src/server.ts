@@ -53,6 +53,50 @@ app.get("/metrics/demo", async (_req, res) => {
   }
 });
 
+app.get("/metrics/overview", async (req, res) => {
+  try {
+    const from = String(req.query.from ?? "2026-01-01");
+    const to = String(req.query.to ?? "2026-01-31");
+
+    const result = await pool.query(
+      `
+      with daily_ads as (
+        select
+          a.id as account_id,
+          d.date,
+          sum(d.cost) as spend,
+          sum(d.attributed_sales) as attributed_sales
+        from daily_ad_stats d
+        join campaigns c on c.id = d.campaign_id
+        join ad_profiles p on p.id = c.ad_profile_id
+        join accounts a on a.id = p.account_id
+        where d.date >= $1::date and d.date <= $2::date
+        group by a.id, d.date
+      )
+      select
+        da.date,
+        da.spend,
+        da.attributed_sales,
+        s.total_sales,
+        (da.spend / nullif(da.attributed_sales, 0)) as acos,
+        (da.attributed_sales / nullif(da.spend, 0)) as roas,
+        (da.spend / nullif(s.total_sales, 0)) as tacos
+      from daily_ads da
+      join daily_sales s
+        on s.account_id = da.account_id
+        and s.date = da.date
+      order by da.date asc;
+      `,
+      [from, to]
+    );
+
+    res.json({ from, to, rows: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
