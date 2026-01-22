@@ -1,0 +1,11 @@
+# env files
+.env
+.env.*
+!.env.example
+
+# node
+node_modules/
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
