@@ -1,3 +1,6 @@
+import { CampaignSelect } from "@/components/CampaignSelect";
+
+
 type Campaign = {
   id: string;
   name: string;
@@ -19,8 +22,9 @@ type CampaignRow = {
 export default async function ComparePage({
   searchParams,
 }: {
-  searchParams: { from?: string; to?: string };
+  searchParams: Promise<{ id?: string; from?: string; to?: string }>;
 }) {
+  const sp = await searchParams;
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
 
@@ -48,9 +52,11 @@ export default async function ComparePage({
   }
 
   // 2) Compare metrics for the first campaign (add selection UI next)
-  const ids = [first.id];
-  const from = searchParams.from ?? "2026-01-20";
-  const to = searchParams.to ?? "2026-01-22";
+const from = sp.from ?? "2026-01-20";
+const to = sp.to ?? "2026-01-22";
+const selectedId = sp.id ?? campaigns[0].id;
+const selected = campaigns.find((c) => c.id === selectedId) ?? campaigns[0];
+const ids = [selected.id];
 
 
   const params = new URLSearchParams({
@@ -78,7 +84,14 @@ export default async function ComparePage({
     <main style={{ padding: 24, fontFamily: "system-ui" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700 }}>Compare Campaigns</h1>
 
-      <p style={{ color: "#6b7280", marginTop: 8 }}>Showing: {first.name}</p>
+      <CampaignSelect
+        campaigns={campaigns}
+        selectedId={selected.id}
+        from={from}
+        to={to}
+      />
+
+      <p style={{ color: "#6b7280", marginTop: 8 }}>Showing: {selected.name}</p>
 
       <p style={{ color: "#6b7280", marginTop: 8 }}>
         Range: {from} → {to}

@@ -13,11 +13,13 @@ type Row = {
 export default async function OverviewPage({
   searchParams,
 }: {
-  searchParams: { from?: string; to?: string };
+  searchParams: Promise<{ from?: string; to?: string }>;
 }) {
 
-  const from = searchParams.from ?? "2026-01-01";
-  const to = searchParams.to ?? "2026-01-31";
+  const sp = await searchParams;
+
+  const from = sp.from ?? "2026-01-01";
+  const to = sp.to ?? "2026-01-31";
   const params = new URLSearchParams({ from, to });
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
