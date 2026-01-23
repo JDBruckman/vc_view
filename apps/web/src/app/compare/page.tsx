@@ -1,15 +1,49 @@
+type Campaign = {
+  id: string;
+  name: string;
+  ad_type: string;
+  status: string;
+};
+
 type CampaignRow = {
   campaign_id: string;
   campaign_name: string;
   spend: string;
   attributed_sales: string;
+  total_sales: string;
   acos: string | null;
   roas: string | null;
+  tacos: string | null;
 };
 
 export default async function ComparePage() {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
 
-  const ids = ["b71d78cc-277c-49af-9cf0-455457a236e2"];
+    // 1) Fetch campaigns so we're not hardcoding IDs
+  const campaignsRes = await fetch(`${baseUrl}/campaigns`, { cache: "no-store" });
+  if (!campaignsRes.ok) {
+    return (
+      <main style={{ padding: 24 }}>
+        <h1>Compare Campaigns</h1>
+        <p>Failed to fetch campaigns: {campaignsRes.status}</p>
+      </main>
+    );
+  }
+
+  const campaigns: Campaign[] = await campaignsRes.json();
+  const first = campaigns[0];
+
+  if (!first) {
+    return (
+      <main style={{ padding: 24 }}>
+        <h1>Compare Campaigns</h1>
+        <p>No campaigns found.</p>
+      </main>
+    );
+  }
+
+  // 2) Compare metrics for the first campaign (add selection UI next)
+  const ids = [first.id];
   const from = "2026-01-20";
   const to = "2026-01-22";
 
@@ -19,7 +53,7 @@ export default async function ComparePage() {
     to,
   });
 
-  const res = await fetch(`http://localhost:4000/metrics/campaigns?${params}`, {
+  const res = await fetch(`${baseUrl}/metrics/campaigns?${params}`, {
     cache: "no-store",
   });
 
@@ -37,6 +71,9 @@ export default async function ComparePage() {
   return (
     <main style={{ padding: 24, fontFamily: "system-ui" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700 }}>Compare Campaigns</h1>
+
+      <p style={{ color: "#6b7280", marginTop: 8 }}>Showing: {first.name}</p>
+
       <p style={{ color: "#6b7280", marginTop: 8 }}>
         Range: {from} → {to}
       </p>
@@ -54,24 +91,30 @@ export default async function ComparePage() {
             <Th>Campaign</Th>
             <Th>Spend</Th>
             <Th>Attributed Sales</Th>
+            <Th>Total Sales</Th>
             <Th>ACoS</Th>
             <Th>ROAS</Th>
+            <Th>TACoS</Th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => {
             const spend = Number(r.spend ?? 0);
             const sales = Number(r.attributed_sales ?? 0);
+            const totalSales = Number(r.total_sales ?? 0);
             const acos = r.acos === null ? null : Number(r.acos);
             const roas = r.roas === null ? null : Number(r.roas);
+            const tacos = r.tacos === null ? null : Number(r.tacos);
 
             return (
               <tr key={r.campaign_id}>
                 <Td>{r.campaign_name}</Td>
                 <Td>${spend.toFixed(2)}</Td>
                 <Td>${sales.toFixed(2)}</Td>
+                <Td>${totalSales.toFixed(2)}</Td>
                 <Td>{acos === null ? "—" : `${(acos * 100).toFixed(2)}%`}</Td>
                 <Td>{roas === null ? "—" : roas.toFixed(2)}</Td>
+                <Td>{tacos === null ? "—" : `${(tacos * 100).toFixed(2)}%`}</Td>
               </tr>
             );
           })}
@@ -96,3 +139,4 @@ function Td({ children }: { children: React.ReactNode }) {
     </td>
   );
 }
+

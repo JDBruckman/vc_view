@@ -112,22 +112,58 @@ app.get("/metrics/campaigns", async (req, res) => {
 
     const result = await pool.query(
       `
+      with sales_by_account as (
+        select
+          account_id,
+          sum(total_sales) as total_sales
+        from daily_sales
+        where date >= $2::date
+          and date <= $3::date
+        group by account_id
+      )
       select
         c.id as campaign_id,
         c.name as campaign_name,
         sum(d.cost) as spend,
         sum(d.attributed_sales) as attributed_sales,
+        sba.total_sales as total_sales,
         (sum(d.cost) / nullif(sum(d.attributed_sales), 0)) as acos,
-        (sum(d.attributed_sales) / nullif(sum(d.cost), 0)) as roas
+        (sum(d.attributed_sales) / nullif(sum(d.cost), 0)) as roas,
+        (sum(d.cost) / nullif(sba.total_sales, 0)) as tacos
       from daily_ad_stats d
       join campaigns c on c.id = d.campaign_id
+      join ad_profiles p on p.id = c.ad_profile_id
+      join sales_by_account sba on sba.account_id = p.account_id
       where c.id = any($1::uuid[])
         and d.date >= $2::date
         and d.date <= $3::date
-      group by c.id, c.name
+      group by c.id, c.name, sba.total_sales
       order by spend desc;
       `,
       [ids, from, to]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+
+app.get("/campaigns", async (_req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      select
+        id,
+        amazon_campaign_id,
+        name,
+        ad_type,
+        status
+      from campaigns
+      order by created_at desc
+      limit 200;
+      `
     );
 
     res.json(result.rows);

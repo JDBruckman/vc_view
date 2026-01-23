@@ -20,7 +20,8 @@ export default async function OverviewPage({
   const to = searchParams.to ?? "2026-01-31";
   const params = new URLSearchParams({ from, to });
 
-  const res = await fetch(`http://localhost:4000/metrics/overview?${params}`, {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
+  const res = await fetch(`${baseUrl}/metrics/overview?${params}`, {
     cache: "no-store",
   });
 
