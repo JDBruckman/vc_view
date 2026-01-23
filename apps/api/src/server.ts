@@ -13,6 +13,7 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "api" });
 });
 
+
 app.get("/health/db", async (_req, res) => {
   try {
     const result = await pool.query("select now() as now");
@@ -24,6 +25,7 @@ app.get("/health/db", async (_req, res) => {
     });
   }
 });
+
 
 app.get("/metrics/demo", async (_req, res) => {
   try {
@@ -52,6 +54,7 @@ app.get("/metrics/demo", async (_req, res) => {
     res.status(500).json({ error: (err as Error).message });
   }
 });
+
 
 app.get("/metrics/overview", async (req, res) => {
   try {
@@ -91,6 +94,43 @@ app.get("/metrics/overview", async (req, res) => {
     );
 
     res.json({ from, to, rows: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+
+app.get("/metrics/campaigns", async (req, res) => {
+  try {
+    const ids = String(req.query.ids ?? "").split(",").filter(Boolean);
+    const from = String(req.query.from);
+    const to = String(req.query.to);
+
+    if (!ids.length || !from || !to) {
+      return res.status(400).json({ error: "ids, from, and to are required" });
+    }
+
+    const result = await pool.query(
+      `
+      select
+        c.id as campaign_id,
+        c.name as campaign_name,
+        sum(d.cost) as spend,
+        sum(d.attributed_sales) as attributed_sales,
+        (sum(d.cost) / nullif(sum(d.attributed_sales), 0)) as acos,
+        (sum(d.attributed_sales) / nullif(sum(d.cost), 0)) as roas
+      from daily_ad_stats d
+      join campaigns c on c.id = d.campaign_id
+      where c.id = any($1::uuid[])
+        and d.date >= $2::date
+        and d.date <= $3::date
+      group by c.id, c.name
+      order by spend desc;
+      `,
+      [ids, from, to]
+    );
+
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
