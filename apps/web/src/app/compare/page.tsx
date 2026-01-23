@@ -16,7 +16,12 @@ type CampaignRow = {
   tacos: string | null;
 };
 
-export default async function ComparePage() {
+export default async function ComparePage({
+  searchParams,
+}: {
+  searchParams: { from?: string; to?: string };
+}) {
+
   const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
 
     // 1) Fetch campaigns so we're not hardcoding IDs
@@ -44,8 +49,9 @@ export default async function ComparePage() {
 
   // 2) Compare metrics for the first campaign (add selection UI next)
   const ids = [first.id];
-  const from = "2026-01-20";
-  const to = "2026-01-22";
+  const from = searchParams.from ?? "2026-01-20";
+  const to = searchParams.to ?? "2026-01-22";
+
 
   const params = new URLSearchParams({
     ids: ids.join(","),
