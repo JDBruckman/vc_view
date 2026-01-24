@@ -172,6 +172,40 @@ app.get("/campaigns", async (_req, res) => {
   }
 });
 
+app.get("/metrics/campaigns/daily", async (req, res) => {
+  try {
+    const ids = String(req.query.ids ?? "").split(",").filter(Boolean);
+    const from = String(req.query.from);
+    const to = String(req.query.to);
+
+    if (!ids.length || !from || !to) {
+      return res.status(400).json({ error: "ids, from, and to are required" });
+    }
+
+    const result = await pool.query(
+      `
+      select
+        c.id as campaign_id,
+        c.name as campaign_name,
+        d.date,
+        sum(d.cost) as spend
+      from daily_ad_stats d
+      join campaigns c on c.id = d.campaign_id
+      where c.id = any($1::uuid[])
+        and d.date >= $2::date
+        and d.date <= $3::date
+      group by c.id, c.name, d.date
+      order by d.date asc;
+      `,
+      [ids, from, to]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => {

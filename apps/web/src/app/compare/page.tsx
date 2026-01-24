@@ -1,4 +1,4 @@
-import { CampaignSelect } from "@/components/CampaignSelect";
+import { CampaignMultiSelect } from "@/components/CampaignMultiSelect";
 
 
 type Campaign = {
@@ -22,7 +22,7 @@ type CampaignRow = {
 export default async function ComparePage({
   searchParams,
 }: {
-  searchParams: Promise<{ id?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ ids?: string; from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
 
@@ -54,13 +54,12 @@ export default async function ComparePage({
   // 2) Compare metrics for the first campaign (add selection UI next)
 const from = sp.from ?? "2026-01-20";
 const to = sp.to ?? "2026-01-22";
-const selectedId = sp.id ?? campaigns[0].id;
-const selected = campaigns.find((c) => c.id === selectedId) ?? campaigns[0];
-const ids = [selected.id];
+const selectedIds = sp.ids?.split(",").filter(Boolean) ?? [campaigns[0].id];
+
 
 
   const params = new URLSearchParams({
-    ids: ids.join(","),
+    ids: selectedIds.join(","),
     from,
     to,
   });
@@ -84,14 +83,14 @@ const ids = [selected.id];
     <main style={{ padding: 24, fontFamily: "system-ui" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700 }}>Compare Campaigns</h1>
 
-      <CampaignSelect
+      <CampaignMultiSelect 
         campaigns={campaigns}
-        selectedId={selected.id}
+        selectedIds={selectedIds}
         from={from}
         to={to}
       />
 
-      <p style={{ color: "#6b7280", marginTop: 8 }}>Showing: {selected.name}</p>
+      <p style={{ color: "#6b7280", marginTop: 8 }}>Selected: {selectedIds.length}</p>
 
       <p style={{ color: "#6b7280", marginTop: 8 }}>
         Range: {from} → {to}
