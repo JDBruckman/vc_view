@@ -18,7 +18,7 @@ type CampaignRow = {
   total_sales: string;
   acos: string | null;
   roas: string | null;
-  tacos: string | null;
+  tacos_account: string | null;
 };
 
 export default async function ComparePage({
@@ -124,7 +124,7 @@ const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
             <Th>Total Sales</Th>
             <Th>ACoS</Th>
             <Th>ROAS</Th>
-            <Th>TACoS</Th>
+            <Th>TACoS (account)</Th>
           </tr>
         </thead>
         <tbody>
@@ -134,7 +134,7 @@ const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
             const totalSales = Number(r.total_sales ?? 0);
             const acos = r.acos === null ? null : Number(r.acos);
             const roas = r.roas === null ? null : Number(r.roas);
-            const tacos = r.tacos === null ? null : Number(r.tacos);
+            const tacos = r.tacos_account === null ? null : Number(r.tacos_account);
 
             return (
               <tr key={r.campaign_id}>

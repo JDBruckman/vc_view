@@ -23,6 +23,14 @@ export default async function OverviewPage({
   const params = new URLSearchParams({ from, to });
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
+
+  const accountRes = await fetch(
+  `${baseUrl}/metrics/account?${new URLSearchParams({ from, to })}`,
+  { cache: "no-store" }
+);
+
+const account = accountRes.ok ? await accountRes.json() : null;
+
   const res = await fetch(`${baseUrl}/metrics/overview?${params}`, {
     cache: "no-store",
   });
@@ -38,34 +46,33 @@ export default async function OverviewPage({
 
   const data: { from: string; to: string; rows: Row[] } = await res.json();
 
-  const totals = data.rows.reduce(
-    (acc, r) => {
-      acc.spend += Number(r.spend ?? 0);
-      acc.attributedSales += Number(r.attributed_sales ?? 0);
-      acc.totalSales += Number(r.total_sales ?? 0);
-      return acc;
-    },
-    { spend: 0, attributedSales: 0, totalSales: 0 }
-  );
 
   const chartData = data.rows.map((r) => ({
     date: r.date,
     spend: Number(r.spend ?? 0),
   }));
 
-  const acos =
-    totals.attributedSales === 0 ? null : totals.spend / totals.attributedSales;
-  const roas = totals.spend === 0 ? null : totals.attributedSales / totals.spend;
-  const tacos = totals.totalSales === 0 ? null : totals.spend / totals.totalSales;
+  function n(v: unknown) {
+    return v === null || v === undefined ? 0 : Number(v);
+  }
+
+const spend = n(account?.spend);
+const attributedSales = n(account?.attributed_sales);
+const totalSales = n(account?.total_sales);
+
+const acos = account?.acos === null || account?.acos === undefined ? null : Number(account.acos);
+const roas = account?.roas === null || account?.roas === undefined ? null : Number(account.roas);
+const tacos = account?.tacos_account === null || account?.tacos_account === undefined ? null : Number(account.tacos_account);
+
 
   return (
     <main style={{ padding: 24, fontFamily: "system-ui" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700 }}>Overview</h1>
 
       <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
-        <Kpi label="Spend" value={`$${totals.spend.toFixed(2)}`} />
-        <Kpi label="Attributed Sales" value={`$${totals.attributedSales.toFixed(2)}`} />
-        <Kpi label="Total Sales" value={`$${totals.totalSales.toFixed(2)}`} />
+        <Kpi label="Spend" value={`$${spend.toFixed(2)}`} />
+        <Kpi label="Attributed Sales" value={`$${attributedSales.toFixed(2)}`} />
+        <Kpi label="Total Sales" value={`$${totalSales.toFixed(2)}`} />
         <Kpi label="ACoS" value={acos === null ? "—" : `${(acos * 100).toFixed(2)}%`} />
         <Kpi label="ROAS" value={roas === null ? "—" : roas.toFixed(2)} />
         <Kpi label="TACoS" value={tacos === null ? "—" : `${(tacos * 100).toFixed(2)}%`} />

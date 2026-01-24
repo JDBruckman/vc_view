@@ -38,7 +38,7 @@ app.get("/metrics/demo", async (_req, res) => {
         s.total_sales,
         (d.cost / nullif(d.attributed_sales, 0)) as acos,
         (d.attributed_sales / nullif(d.cost, 0)) as roas,
-        (d.cost / nullif(s.total_sales, 0)) as tacos
+        (d.cost / nullif(s.total_sales, 0)) as tacos_account
       from daily_ad_stats d
       join campaigns c on c.id = d.campaign_id
       join ad_profiles p on p.id = c.ad_profile_id
@@ -129,7 +129,7 @@ app.get("/metrics/campaigns", async (req, res) => {
         sba.total_sales as total_sales,
         (sum(d.cost) / nullif(sum(d.attributed_sales), 0)) as acos,
         (sum(d.attributed_sales) / nullif(sum(d.cost), 0)) as roas,
-        (sum(d.cost) / nullif(sba.total_sales, 0)) as tacos
+        (sum(d.cost) / nullif(sba.total_sales, 0)) as tacos_account
       from daily_ad_stats d
       join campaigns c on c.id = d.campaign_id
       join ad_profiles p on p.id = c.ad_profile_id
@@ -201,6 +201,67 @@ app.get("/metrics/campaigns/daily", async (req, res) => {
     );
 
     res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+app.get("/metrics/account", async (req, res) => {
+  try {
+    const from = String(req.query.from);
+    const to = String(req.query.to);
+
+    if (!from || !to) {
+      return res.status(400).json({ error: "from and to are required" });
+    }
+
+    const result = await pool.query(
+      `
+      with daily_ads as (
+        select
+          a.id as account_id,
+          d.date,
+          sum(d.cost) as spend,
+          sum(d.attributed_sales) as attributed_sales
+        from daily_ad_stats d
+        join campaigns c on c.id = d.campaign_id
+        join ad_profiles p on p.id = c.ad_profile_id
+        join accounts a on a.id = p.account_id
+        where d.date >= $1::date and d.date <= $2::date
+        group by a.id, d.date
+      ),
+      totals as (
+        select
+          account_id,
+          sum(spend) as spend,
+          sum(attributed_sales) as attributed_sales
+        from daily_ads
+        group by account_id
+      ),
+      sales as (
+        select
+          account_id,
+          sum(total_sales) as total_sales
+        from daily_sales
+        where date >= $1::date and date <= $2::date
+        group by account_id
+      )
+      select
+        t.account_id,
+        t.spend,
+        t.attributed_sales,
+        s.total_sales,
+        (t.spend / nullif(t.attributed_sales, 0)) as acos,
+        (t.attributed_sales / nullif(t.spend, 0)) as roas,
+        (t.spend / nullif(s.total_sales, 0)) as tacos_account
+      from totals t
+      join sales s on s.account_id = t.account_id
+      limit 1;
+      `,
+      [from, to]
+    );
+
+    res.json(result.rows[0] ?? null);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
