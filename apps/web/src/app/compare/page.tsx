@@ -1,4 +1,6 @@
 import { CampaignMultiSelect } from "@/components/CampaignMultiSelect";
+import { CampaignSpendChart } from "@/components/CampaignSpendChart";
+
 
 
 type Campaign = {
@@ -58,11 +60,17 @@ const selectedIds = sp.ids?.split(",").filter(Boolean) ?? [campaigns[0].id];
 
 
 
-  const params = new URLSearchParams({
-    ids: selectedIds.join(","),
-    from,
-    to,
-  });
+const params = new URLSearchParams({
+  ids: selectedIds.join(","),
+  from,
+  to,
+});
+
+const dailyRes = await fetch(
+  `${baseUrl}/metrics/campaigns/daily?${params}`,
+  { cache: "no-store" }
+);
+const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
 
   const res = await fetch(`${baseUrl}/metrics/campaigns?${params}`, {
     cache: "no-store",
@@ -95,6 +103,10 @@ const selectedIds = sp.ids?.split(",").filter(Boolean) ?? [campaigns[0].id];
       <p style={{ color: "#6b7280", marginTop: 8 }}>
         Range: {from} → {to}
       </p>
+
+      <h2 style={{ marginTop: 24, fontSize: 16 }}>Spend over time</h2>
+      <CampaignSpendChart rows={dailyRows} />
+
 
       <table
         style={{
