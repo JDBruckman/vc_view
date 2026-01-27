@@ -2,12 +2,85 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { pool } from "./lib/db.js";
+import crypto from "node:crypto";
+
 
 
 const app = express();
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+
+function getLwaAuthorizeUrl(state: string) {
+  // Amazon Ads API uses LWA Authorization Code Grant
+  // Scopes for Ads API are assigned to your LWA app; common one is advertising::campaign_management
+  // (You can expand scopes later as needed)
+  const scope = "advertising::campaign_management"; // :contentReference[oaicite:2]{index=2}
+
+  const url = new URL("https://www.amazon.com/ap/oa"); // LWA auth endpoint :contentReference[oaicite:3]{index=3}
+  url.searchParams.set("client_id", process.env.AMAZON_LWA_CLIENT_ID!);
+  url.searchParams.set("scope", scope);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("redirect_uri", process.env.AMAZON_LWA_REDIRECT_URI!);
+  url.searchParams.set("state", state);
+  return url.toString();
+}
+
+app.get("/auth/amazon/start", (req, res) => {
+  // In production NEED to store/validate state (CSRF protection).
+  // For MVP generate a random state and echo it back in callback validation later.
+  const state = crypto.randomBytes(16).toString("hex");
+  res.redirect(getLwaAuthorizeUrl(state));
+});
+
+app.get("/auth/amazon/callback", async (req, res) => {
+  try {
+    const code = String(req.query.code ?? "");
+    const state = String(req.query.state ?? "");
+    const error = String(req.query.error ?? "");
+
+    if (error) {
+      return res.status(400).json({ ok: false, error });
+    }
+    if (!code) {
+      return res.status(400).json({ ok: false, error: "Missing code" });
+    }
+
+    // Exchange auth code for tokens :contentReference[oaicite:4]{index=4}
+    const tokenRes = await fetch("https://api.amazon.com/auth/o2/token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: process.env.AMAZON_LWA_REDIRECT_URI!,
+        client_id: process.env.AMAZON_LWA_CLIENT_ID!,
+        client_secret: process.env.AMAZON_LWA_CLIENT_SECRET!,
+      }),
+    });
+
+    const tokenJson = await tokenRes.json();
+
+    if (!tokenRes.ok) {
+      return res.status(400).json({
+        ok: false,
+        error: "Token exchange failed",
+        details: tokenJson,
+      });
+    }
+
+    // For now: just show tokens (DEV ONLY).
+    // Will need to store refresh_token in DB and fetch /v2/profiles.
+    res.json({
+      ok: true,
+      state,
+      token: tokenJson,
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: (err as Error).message });
+  }
+});
+
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "api" });
