@@ -80,8 +80,24 @@ const tacos = account?.tacos_account === null || account?.tacos_account === unde
 
       <h2 style={{ marginTop: 24, fontSize: 16 }}>Spend (daily)</h2>
       <SpendChart data={chartData} />
-      <h2 style={{ marginTop: 24, fontSize: 16 }}>Raw rows</h2>
-      <pre style={{ marginTop: 8 }}>{JSON.stringify(data, null, 2)}</pre>
+      {/* <h2 style={{ marginTop: 24, fontSize: 16 }}>Raw rows</h2> */}
+      {/* <pre style={{ marginTop: 8 }}>{JSON.stringify(data, null, 2)}</pre> */}
+
+      <form action="/auth/logout" method="post" style={{ marginBottom: 16 }}>
+        <button
+          type="submit"
+          style={{
+            padding: 10,
+            borderRadius: 10,
+            border: "1px solid #e5e7eb",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Logout
+        </button>
+      </form>
+
     </main>
   );
 }
