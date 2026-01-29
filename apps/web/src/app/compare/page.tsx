@@ -1,6 +1,14 @@
 import { CampaignMultiSelect } from "@/components/CampaignMultiSelect";
 import { CampaignSpendChart } from "@/components/CampaignSpendChart";
 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 
 type Campaign = {
@@ -108,65 +116,45 @@ const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
       <CampaignSpendChart rows={dailyRows} />
 
 
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          marginTop: 16,
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        <thead>
-          <tr style={{ background: "#f9fafb" }}>
-            <Th>Campaign</Th>
-            <Th>Spend</Th>
-            <Th>Attributed Sales</Th>
-            <Th>Total Sales</Th>
-            <Th>ACoS</Th>
-            <Th>ROAS</Th>
-            <Th>TACoS (account)</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => {
-            const spend = Number(r.spend ?? 0);
-            const sales = Number(r.attributed_sales ?? 0);
-            const totalSales = Number(r.total_sales ?? 0);
-            const acos = r.acos === null ? null : Number(r.acos);
-            const roas = r.roas === null ? null : Number(r.roas);
-            const tacos = r.tacos_account === null ? null : Number(r.tacos_account);
+<Table className="mt-4 border">
+  <TableHeader>
+    <TableRow>
+      <TableHead>Campaign</TableHead>
+      <TableHead>Spend</TableHead>
+      <TableHead>Attributed Sales</TableHead>
+      <TableHead>Total Sales</TableHead>
+      <TableHead>ACoS</TableHead>
+      <TableHead>ROAS</TableHead>
+      <TableHead>TACoS (account)</TableHead>
+    </TableRow>
+  </TableHeader>
 
-            return (
-              <tr key={r.campaign_id}>
-                <Td>{r.campaign_name}</Td>
-                <Td>${spend.toFixed(2)}</Td>
-                <Td>${sales.toFixed(2)}</Td>
-                <Td>${totalSales.toFixed(2)}</Td>
-                <Td>{acos === null ? "—" : `${(acos * 100).toFixed(2)}%`}</Td>
-                <Td>{roas === null ? "—" : roas.toFixed(2)}</Td>
-                <Td>{tacos === null ? "—" : `${(tacos * 100).toFixed(2)}%`}</Td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+  <TableBody>
+    {rows.map((r) => {
+      const spend = Number(r.spend ?? 0);
+      const sales = Number(r.attributed_sales ?? 0);
+      const totalSales = Number(r.total_sales ?? 0);
+      const acos = r.acos === null ? null : Number(r.acos);
+      const roas = r.roas === null ? null : Number(r.roas);
+      const tacos = r.tacos_account === null ? null : Number(r.tacos_account);
+
+      return (
+        <TableRow key={r.campaign_id}>
+          <TableCell className="font-medium">{r.campaign_name}</TableCell>
+          <TableCell>${spend.toFixed(2)}</TableCell>
+          <TableCell>${sales.toFixed(2)}</TableCell>
+          <TableCell>${totalSales.toFixed(2)}</TableCell>
+          <TableCell>{acos === null ? "—" : `${(acos * 100).toFixed(2)}%`}</TableCell>
+          <TableCell>{roas === null ? "—" : roas.toFixed(2)}</TableCell>
+          <TableCell>{tacos === null ? "—" : `${(tacos * 100).toFixed(2)}%`}</TableCell>
+        </TableRow>
+      );
+    })}
+  </TableBody>
+</Table>
+
     </main>
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th style={{ textAlign: "left", padding: 12, borderBottom: "1px solid #e5e7eb" }}>
-      {children}
-    </th>
-  );
-}
-
-function Td({ children }: { children: React.ReactNode }) {
-  return (
-    <td style={{ padding: 12, borderBottom: "1px solid #e5e7eb" }}>
-      {children}
-    </td>
-  );
-}
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Checkbox } from "@/components/ui/checkbox";
+
 
 type Campaign = {
   id: string;
@@ -58,11 +60,7 @@ export function CampaignMultiSelect({
                 cursor: "pointer",
               }}
             >
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => toggle(c.id)}
-              />
+              <Checkbox checked={checked} onCheckedChange={() => toggle(c.id)} />
               <span>
                 {c.name} ({c.ad_type})
               </span>
