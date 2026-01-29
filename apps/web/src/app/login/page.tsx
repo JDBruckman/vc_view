@@ -1,62 +1,48 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
 export default function LoginPage() {
   return (
-    <main
-      style={{
-        padding: 24,
-        fontFamily: "system-ui",
-        maxWidth: 420,
-        margin: "80px auto",
-      }}
-    >
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>Sign in</h1>
-      <p style={{ color: "#6b7280", marginTop: 8 }}>
-        Login with Amazon
-      </p>
+    <main className="mx-auto mt-20 max-w-md px-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Sign in</CardTitle>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Mock Login with Amazon (development only)
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form action="/auth/mock" method="post" className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="analyst@company.com"
+              />
+            </div>
 
-      <form action='/auth/mock' method="post" style={{ marginTop: 18 }}>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 12, color: '#374151' }}>Email</span>
-          <input 
-            name="email"
-            type="email"
-            required
-            placeholder="analyst@noco.com"
-            style={{
-              padding: 10,
-              borderRadius: 8,
-              border: "1px solid #e5e7eb",
-            }}
-          />
-        </label>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 12, color: '#374151' }}>Password</span>
-          <input 
-            name="password"
-            type="password"
-            required
-            placeholder="••••••••"
-            style={{
-              padding: 10,
-              borderRadius: 8,
-              border: "1px solid #e5e7eb",
-            }}
-          />
-        </label>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
 
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid #e5e7eb",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          Sign in with Amazon
-        </button>
-      </form>
+            <Button type="submit" className="w-full bg-yellow-400">
+              Sign in with Amazon
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </main>
   );
 }

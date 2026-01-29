@@ -1,4 +1,6 @@
 import { SpendChart } from "@/components/SpendChart";
+import { Card, CardContent } from "@/components/ui/card";
+
 
 type Row = {
   date: string;
@@ -104,16 +106,12 @@ const tacos = account?.tacos_account === null || account?.tacos_account === unde
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        padding: 16,
-        minWidth: 180,
-      }}
-    >
-      <div style={{ fontSize: 12, color: "#6b7280" }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 700, marginTop: 6 }}>{value}</div>
-    </div>
+    <Card className="min-w-45">
+      <CardContent className="p-4">
+        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="mt-2 text-xl font-semibold">{value}</div>
+      </CardContent>
+    </Card>
   );
 }
+
