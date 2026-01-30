@@ -39,7 +39,7 @@ const account = accountRes.ok ? await accountRes.json() : null;
 
   if (!res.ok) {
     return (
-      <main style={{ padding: 24 }}>
+      <main className="space-y-6">
         <h1>Overview</h1>
         <p>Failed to fetch: {res.status}</p>
       </main>
@@ -68,10 +68,14 @@ const tacos = account?.tacos_account === null || account?.tacos_account === unde
 
 
   return (
-    <main style={{ padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>Overview</h1>
-
-      <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
+    <main className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Overview</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Range: {from} → {to}
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-4">
         <Kpi label="Spend" value={`$${spend.toFixed(2)}`} />
         <Kpi label="Attributed Sales" value={`$${attributedSales.toFixed(2)}`} />
         <Kpi label="Total Sales" value={`$${totalSales.toFixed(2)}`} />
@@ -80,10 +84,8 @@ const tacos = account?.tacos_account === null || account?.tacos_account === unde
         <Kpi label="TACoS" value={tacos === null ? "—" : `${(tacos * 100).toFixed(2)}%`} />
       </div>
 
-      <h2 style={{ marginTop: 24, fontSize: 16 }}>Spend (daily)</h2>
+      <h2 className="text-base font-semibold">Spend (daily)</h2>
       <SpendChart data={chartData} />
-      {/* <h2 style={{ marginTop: 24, fontSize: 16 }}>Raw rows</h2> */}
-      {/* <pre style={{ marginTop: 8 }}>{JSON.stringify(data, null, 2)}</pre> */}
 
       <form action="/auth/logout" method="post" style={{ marginBottom: 16 }}>
         <button
