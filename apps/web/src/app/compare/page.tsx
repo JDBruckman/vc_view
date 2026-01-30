@@ -42,7 +42,7 @@ export default async function ComparePage({
   const campaignsRes = await fetch(`${baseUrl}/campaigns`, { cache: "no-store" });
   if (!campaignsRes.ok) {
     return (
-      <main style={{ padding: 24 }}>
+      <main className="space-y-6">
         <h1>Compare Campaigns</h1>
         <p>Failed to fetch campaigns: {campaignsRes.status}</p>
       </main>
@@ -54,7 +54,7 @@ export default async function ComparePage({
 
   if (!first) {
     return (
-      <main style={{ padding: 24 }}>
+      <main className="space-y-6">
         <h1>Compare Campaigns</h1>
         <p>No campaigns found.</p>
       </main>
@@ -86,7 +86,7 @@ const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
 
   if (!res.ok) {
     return (
-      <main style={{ padding: 24 }}>
+      <main className="space-y-6">
         <h1>Compare Campaigns</h1>
         <p>Failed to fetch: {res.status}</p>
       </main>
@@ -96,8 +96,13 @@ const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
   const rows: CampaignRow[] = await res.json();
 
   return (
-    <main style={{ padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>Compare Campaigns</h1>
+    <main className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Compare Campaigns</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Range: {from} → {to} · Selected: {selectedIds.length} campaign(s)
+        </p>
+      </div>
 
       <CampaignMultiSelect 
         campaigns={campaigns}
@@ -105,15 +110,11 @@ const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
         from={from}
         to={to}
       />
+      <div className="space-y-3">
+        <h2 className="text-base font-semibold">Spend over time</h2>
+        <CampaignSpendChart rows={dailyRows} />
+      </div>
 
-      <p style={{ color: "#6b7280", marginTop: 8 }}>Selected: {selectedIds.length}</p>
-
-      <p style={{ color: "#6b7280", marginTop: 8 }}>
-        Range: {from} → {to}
-      </p>
-
-      <h2 style={{ marginTop: 24, fontSize: 16 }}>Spend over time</h2>
-      <CampaignSpendChart rows={dailyRows} />
 
 
 <Table className="mt-4 border">
