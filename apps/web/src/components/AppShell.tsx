@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -12,6 +12,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+
+import { Menu } from "lucide-react";
 
 const navItems = [
   { href: "/overview", label: "Overview" },
@@ -35,9 +37,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background text-foreground">
       {/* Mobile top bar */}
       <header className="sticky top-0 z-40 flex items-center gap-3 border-b bg-background px-4 py-3 md:hidden">
-        <Button variant="outline" size="icon" onClick={() => setOpen(true)} aria-label="Open menu">
-          <span className="text-lg leading-none">☰</span>
-        </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+
         <div className="font-semibold">VC View</div>
       </header>
 
@@ -72,6 +80,11 @@ function SidebarContent({
   pathname: string | null;
   onNavigate?: () => void;
 }) {
+
+  function normalizePath(p: string) {
+    return p.length > 1 && p.endsWith("/") ? p.slice(0, -1) : p;
+  }
+
   return (
     <div className="flex h-full flex-col p-4">
       <div className="hidden md:block">
@@ -83,23 +96,23 @@ function SidebarContent({
 
       <nav className="mt-6 flex flex-col gap-1">
         {navItems.map((item) => {
-          const active =
-            pathname === item.href || pathname?.startsWith(item.href + "/");
+        const current = normalizePath(pathname ?? "");
+        const active = current === item.href;
+
 
           return (
             <Link
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={[
-                "rounded-md px-3 py-2 text-sm transition",
-                active
-                  ? "bg-muted font-semibold text-foreground"
-                  : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-              ].join(" ")}
+              className={buttonVariants({
+                variant: active ? "default" : "ghost",
+                className: "w-full justify-start",
+              })}
             >
               {item.label}
             </Link>
+
           );
         })}
       </nav>
