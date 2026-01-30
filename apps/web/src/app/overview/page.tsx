@@ -87,21 +87,6 @@ const tacos = account?.tacos_account === null || account?.tacos_account === unde
       <h2 className="text-base font-semibold">Spend (daily)</h2>
       <SpendChart data={chartData} />
 
-      <form action="/auth/logout" method="post" style={{ marginBottom: 16 }}>
-        <button
-          type="submit"
-          style={{
-            padding: 10,
-            borderRadius: 10,
-            border: "1px solid #e5e7eb",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
-        >
-          Logout
-        </button>
-      </form>
-
     </main>
   );
 }

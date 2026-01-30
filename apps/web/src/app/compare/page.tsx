@@ -18,7 +18,16 @@ type Campaign = {
   status: string;
 };
 
-type CampaignRow = {
+type CampaignChartRow = {
+  campaign_id: string;
+  campaign_name: string;
+  date: string;
+  spend: string;
+  attributed_sales?: string;
+};
+
+
+type CampaignTableRow = {
   campaign_id: string;
   campaign_name: string;
   spend: string;
@@ -28,6 +37,14 @@ type CampaignRow = {
   roas: string | null;
   tacos_account: string | null;
 };
+
+
+function daysBetween(from: string, to: string) {
+  const a = new Date(from + "T00:00:00Z").getTime();
+  const b = new Date(to + "T00:00:00Z").getTime();
+  const ms = Math.abs(b - a);
+  return Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
+}
 
 export default async function ComparePage({
   searchParams,
@@ -66,6 +83,10 @@ const from = sp.from ?? "2026-01-20";
 const to = sp.to ?? "2026-01-22";
 const selectedIds = sp.ids?.split(",").filter(Boolean) ?? [campaigns[0].id];
 
+const days = daysBetween(from, to);
+
+const period: "daily" | "weekly" | "monthly" =
+  days <= 14 ? "daily" : days <= 60 ? "weekly" : "monthly";
 
 
 const params = new URLSearchParams({
@@ -74,26 +95,39 @@ const params = new URLSearchParams({
   to,
 });
 
-const dailyRes = await fetch(
-  `${baseUrl}/metrics/campaigns/daily?${params}`,
-  { cache: "no-store" }
-);
-const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
+const chartParams = new URLSearchParams({
+  ids: selectedIds.join(","),
+  from,
+  to,
+});
 
-  const res = await fetch(`${baseUrl}/metrics/campaigns?${params}`, {
-    cache: "no-store",
-  });
+const tableRes = await fetch(`${baseUrl}/metrics/campaigns?${params}`, {
+  cache: "no-store",
+});
+const tableRows: CampaignTableRow[] = tableRes.ok ? await tableRes.json() : [];
 
-  if (!res.ok) {
-    return (
-      <main className="space-y-6">
-        <h1>Compare Campaigns</h1>
-        <p>Failed to fetch: {res.status}</p>
-      </main>
-    );
-  }
 
-  const rows: CampaignRow[] = await res.json();
+const chartUrl =
+  period === "daily"
+    ? `${baseUrl}/metrics/campaigns/daily?${chartParams}`
+    : `${baseUrl}/metrics/campaigns/rollup?${new URLSearchParams({
+        period,
+        ids: selectedIds.join(","),
+        from,
+        to,
+      })}`;
+
+const chartRes = await fetch(chartUrl, { cache: "no-store" });
+const chartRows: CampaignChartRow[] =
+  chartRes.ok ? await chartRes.json() : [];
+
+const chartSeries = chartRows.map((r) => ({
+  campaign_id: r.campaign_id,
+  campaign_name: r.campaign_name,
+  date: r.date,
+  spend: Number(r.spend ?? 0),
+}));
+
 
   return (
     <main className="space-y-6">
@@ -111,10 +145,11 @@ const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
         to={to}
       />
       <div className="space-y-3">
-        <h2 className="text-base font-semibold">Spend over time</h2>
-        <CampaignSpendChart rows={dailyRows} />
+        <h2 className="text-base font-semibold">
+          Spend over time <span className="text-sm text-muted-foreground">({period})</span>
+        </h2>
+        <CampaignSpendChart rows={chartSeries} />
       </div>
-
 
 
 <Table className="mt-4 border">
@@ -131,7 +166,7 @@ const dailyRows = dailyRes.ok ? await dailyRes.json() : [];
   </TableHeader>
 
   <TableBody>
-    {rows.map((r) => {
+    {tableRows.map((r) => {
       const spend = Number(r.spend ?? 0);
       const sales = Number(r.attributed_sales ?? 0);
       const totalSales = Number(r.total_sales ?? 0);
