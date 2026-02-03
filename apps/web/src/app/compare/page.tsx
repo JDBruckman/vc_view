@@ -1,5 +1,6 @@
 import { CampaignMultiSelect } from "@/components/CampaignMultiSelect";
 import { CampaignSpendChart } from "@/components/CampaignSpendChart";
+import { PeriodSelect } from "@/components/PeriodSelect";
 
 import {
   Table,
@@ -49,7 +50,7 @@ function daysBetween(from: string, to: string) {
 export default async function ComparePage({
   searchParams,
 }: {
-  searchParams: Promise<{ ids?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ ids?: string; from?: string; to?: string; period?: string }>;
 }) {
   const sp = await searchParams;
 
@@ -85,9 +86,17 @@ const selectedIds = sp.ids?.split(",").filter(Boolean) ?? [campaigns[0].id];
 
 const days = daysBetween(from, to);
 
-const period: "daily" | "weekly" | "monthly" =
+const autoPeriod: "daily" | "weekly" | "monthly" =
   days <= 14 ? "daily" : days <= 60 ? "weekly" : "monthly";
 
+const periodParam = sp.period ?? "auto";
+const periodChoice =
+  periodParam === "daily" || periodParam === "weekly" || periodParam === "monthly"
+    ? periodParam
+    : "auto";
+
+const period: "daily" | "weekly" | "monthly" =
+  periodChoice === "auto" ? autoPeriod : periodChoice;
 
 const params = new URLSearchParams({
   ids: selectedIds.join(","),
@@ -136,6 +145,10 @@ const chartSeries = chartRows.map((r) => ({
         <p className="mt-1 text-sm text-muted-foreground">
           Range: {from} → {to} · Selected: {selectedIds.length} campaign(s)
         </p>
+        <div className="mt-3">
+          <PeriodSelect value={periodChoice} ids={selectedIds} from={from} to={to} />
+        </div>
+
       </div>
 
       <CampaignMultiSelect 
