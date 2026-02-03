@@ -1,5 +1,6 @@
 import { SpendChart } from "@/components/SpendChart";
 import { Card, CardContent } from "@/components/ui/card";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 
 type Row = {
@@ -74,6 +75,10 @@ const tacos = account?.tacos_account === null || account?.tacos_account === unde
         <p className="mt-1 text-sm text-muted-foreground">
           Range: {from} → {to}
         </p>
+        <div className="mt-3">
+          <DateRangePicker from={from} to={to} basePath="/overview" />
+        </div>
+
       </div>
       <div className="flex flex-wrap gap-4">
         <Kpi label="Spend" value={`$${spend.toFixed(2)}`} />

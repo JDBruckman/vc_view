@@ -1,6 +1,7 @@
 import { CampaignMultiSelect } from "@/components/CampaignMultiSelect";
 import { CampaignSpendChart } from "@/components/CampaignSpendChart";
 import { PeriodSelect } from "@/components/PeriodSelect";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 import {
   Table,
@@ -145,6 +146,18 @@ const chartSeries = chartRows.map((r) => ({
         <p className="mt-1 text-sm text-muted-foreground">
           Range: {from} → {to} · Selected: {selectedIds.length} campaign(s)
         </p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <DateRangePicker
+            from={from}
+            to={to}
+            basePath="/compare"
+            extraParams={{
+              ids: selectedIds.join(","),
+              period: periodChoice,
+            }}
+          />
+        </div>
+
         <div className="mt-3">
           <PeriodSelect value={periodChoice} ids={selectedIds} from={from} to={to} />
         </div>
